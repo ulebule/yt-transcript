@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace YtPrepis;
+namespace YtTranscript;
 
 public sealed class MainForm : Form
 {
@@ -42,7 +42,7 @@ public sealed class MainForm : Form
 
     public MainForm()
     {
-        Text = "YT Prepis";
+        Text = "YT Transcript";
         Width = 900;
         Height = 650;
         MinimumSize = new Size(640, 420);

@@ -5,8 +5,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>YtPrepis</RootNamespace>
-    <AssemblyName>YtPrepis</AssemblyName>
+    <RootNamespace>YtTranscript</RootNamespace>
+    <AssemblyName>YtTranscript</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

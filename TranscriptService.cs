@@ -7,7 +7,7 @@ using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.ClosedCaptions;
 using YoutubeExplode.Videos.Streams;
 
-namespace YtPrepis;
+namespace YtTranscript;
 
 public record TranscriptOptions(string Url, string Language, string Model, bool ForceWhisper);
 public record TranscriptResult(string Title, string Text, string Source);
@@ -15,8 +15,20 @@ public record ProgressInfo(string Status, double? Percent, string? PartialText =
 
 public sealed class TranscriptService
 {
-    public static readonly string AppDir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "YtPrepis");
+    public static readonly string AppDir = InitAppDir();
+
+    private static string InitAppDir()
+    {
+        var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var dir = Path.Combine(root, "YtTranscript");
+        var legacy = Path.Combine(root, "YtPrepis"); // name used before v1.1.1
+        try
+        {
+            if (!Directory.Exists(dir) && Directory.Exists(legacy)) Directory.Move(legacy, dir);
+        }
+        catch { /* keep going with a fresh folder */ }
+        return dir;
+    }
 
     private static readonly HttpClient Http = new() { Timeout = Timeout.InfiniteTimeSpan };
     private static readonly TimeSpan ParagraphGap = TimeSpan.FromSeconds(2);
@@ -76,7 +88,7 @@ public sealed class TranscriptService
     {
         var modelPath = await EnsureModelAsync(o.Model, p, ct);
 
-        var tmp = Path.Combine(Path.GetTempPath(), "YtPrepis_" + Guid.NewGuid().ToString("N"));
+        var tmp = Path.Combine(Path.GetTempPath(), "YtTranscript_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tmp);
         try
         {

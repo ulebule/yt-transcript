@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 
-namespace YtPrepis;
+namespace YtTranscript;
 
 /// <summary>Platform-independent audio helpers shared by the Windows and macOS converters.</summary>
 internal static class AudioTools
@@ -36,10 +36,10 @@ internal static class AudioTools
         }
     }
 
-    /// <summary>Converts any audio file with ffmpeg, if it is installed. Set YTPREPIS_NO_FFMPEG=1 to disable.</summary>
+    /// <summary>Converts any audio file with ffmpeg, if it is installed. Set YTTRANSCRIPT_NO_FFMPEG=1 to disable.</summary>
     public static bool TryFfmpeg(string input, string output)
     {
-        if (Environment.GetEnvironmentVariable("YTPREPIS_NO_FFMPEG") == "1") return false;
+        if (Environment.GetEnvironmentVariable("YTTRANSCRIPT_NO_FFMPEG") == "1") return false;
 
         foreach (var ffmpeg in new[] { "ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg" })
         {

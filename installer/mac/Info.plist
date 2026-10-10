@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key>
-  <string>YT Prepis</string>
+  <string>YT Transcript</string>
   <key>CFBundleDisplayName</key>
-  <string>YT Prepis</string>
+  <string>YT Transcript</string>
   <key>CFBundleIdentifier</key>
-  <string>com.ulebule.ytprepis</string>
+  <string>com.ulebule.yttranscript</string>
   <key>CFBundleExecutable</key>
-  <string>YtPrepis</string>
+  <string>YtTranscript</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleVersion</key>

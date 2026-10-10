@@ -1,4 +1,4 @@
-namespace YtPrepis;
+namespace YtTranscript;
 
 static class Program
 {

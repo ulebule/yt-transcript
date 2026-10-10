@@ -1,7 +1,7 @@
 using NAudio.MediaFoundation;
 using NAudio.Wave;
 
-namespace YtPrepis;
+namespace YtTranscript;
 
 /// <summary>Windows: converts downloaded audio to 16 kHz mono WAV with Media Foundation (ffmpeg as fallback).</summary>
 internal static class AudioConverter

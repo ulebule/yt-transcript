@@ -1,14 +1,14 @@
-; Inno Setup script for YT Prepis
+; Inno Setup script for YT Transcript
 ; Built by GitHub Actions (.github/workflows/build.yml). To build manually:
 ;   dotnet publish -c Release -r win-x64 --self-contained -o publish
-;   iscc /DMyAppVersion=1.0.0 installer\YtPrepis.iss
+;   iscc /DMyAppVersion=1.0.0 installer\YtTranscript.iss
 
 #ifndef MyAppVersion
   #define MyAppVersion "1.0.0"
 #endif
 
-#define MyAppName "YT Prepis"
-#define MyAppExe "YtPrepis.exe"
+#define MyAppName "YT Transcript"
+#define MyAppExe "YtTranscript.exe"
 
 [Setup]
 AppId={{8C2F4A1E-6B3D-4E5F-9A7C-2D1B3E4F5A6B}
@@ -26,7 +26,7 @@ PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 OutputDir=Output
-OutputBaseFilename=YtPrepis-Setup-{#MyAppVersion}
+OutputBaseFilename=YtTranscript-Setup-{#MyAppVersion}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -42,6 +42,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+; files and shortcuts from versions before the rename (YT Prepis)
+Type: files; Name: "{app}\YtPrepis.*"
+Type: files; Name: "{autoprograms}\YT Prepis.lnk"
+Type: files; Name: "{autodesktop}\YT Prepis.lnk"
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"

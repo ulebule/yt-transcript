@@ -1,4 +1,4 @@
-namespace YtPrepis;
+namespace YtTranscript;
 
 /// <summary>
 /// macOS: converts downloaded audio to 16 kHz mono WAV with the tools built into macOS

@@ -6,7 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 
-namespace YtPrepis;
+namespace YtTranscript;
 
 public sealed class MainWindow : Window
 {
@@ -52,7 +52,7 @@ public sealed class MainWindow : Window
 
     public MainWindow()
     {
-        Title = "YT Prepis";
+        Title = "YT Transcript";
         Width = 900;
         Height = 650;
         MinWidth = 640;

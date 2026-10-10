@@ -1,5 +1,5 @@
 // Usage: SmokeTest <audio file> <ggml model> <expected word>
-using YtPrepis;
+using YtTranscript;
 
 var (input, model, expected) = (args[0], args[1], args[2]);
 var wav = Path.Combine(Path.GetTempPath(), $"smoke-{Guid.NewGuid():N}.wav");

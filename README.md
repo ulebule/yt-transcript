@@ -18,18 +18,18 @@ Download the right file from [Releases](https://github.com/ulebule/yt-transcript
 
 | System | File |
 |---|---|
-| Windows 10/11 | `YtPrepis-Setup-x.y.z.exe` |
-| Mac with Apple Silicon (M1–M4) | `YtPrepis-x.y.z-mac-apple-silicon.dmg` |
-| Mac with Intel | `YtPrepis-x.y.z-mac-intel.dmg` |
+| Windows 10/11 | `YtTranscript-Setup-x.y.z.exe` |
+| Mac with Apple Silicon (M1–M4) | `YtTranscript-x.y.z-mac-apple-silicon.dmg` |
+| Mac with Intel | `YtTranscript-x.y.z-mac-intel.dmg` |
 
 No admin rights and no .NET installation are required.
 
 **Windows:** run the installer. It is not code-signed, so SmartScreen may show a warning: click *More info* → *Run anyway*.
 
-**macOS:** open the .dmg and drag *YT Prepis* to *Applications*. The app is not notarized by Apple, so the first launch is blocked. Open it once, then go to *System Settings → Privacy & Security* and click *Open Anyway*. Alternatively, run this in Terminal:
+**macOS:** open the .dmg and drag *YT Transcript* to *Applications*. The app is not notarized by Apple, so the first launch is blocked. Open it once, then go to *System Settings → Privacy & Security* and click *Open Anyway*. Alternatively, run this in Terminal:
 
 ```
-xattr -dr com.apple.quarantine "/Applications/YT Prepis.app"
+xattr -dr com.apple.quarantine "/Applications/YT Transcript.app"
 ```
 
 On Apple Silicon, Whisper runs on the GPU (Metal), so transcription is much faster than on a typical Windows laptop.
@@ -43,7 +43,7 @@ Everything is built by GitHub Actions. To publish a new release, bump `<Version>
 | Path | What |
 |---|---|
 | `TranscriptService.cs`, `Loc.cs`, `Audio/` | shared core: YouTube, Whisper, audio conversion, UI strings |
-| `YtPrepis.csproj`, `MainForm.cs` | Windows app (WinForms) |
+| `YtTranscript.csproj`, `MainForm.cs` | Windows app (WinForms) |
 | `mac/` | macOS app (Avalonia) |
 | `tests/SmokeTest/` | macOS end-to-end check used by CI |
 | `installer/` | Inno Setup script (Windows), .app/.dmg packaging (macOS) |
@@ -55,18 +55,18 @@ You need the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 Windows:
 
 ```
-dotnet run --project YtPrepis.csproj -c Release
+dotnet run --project YtTranscript.csproj -c Release
 ```
 
 macOS:
 
 ```
-dotnet run --project mac/YtPrepis.Mac.csproj -c Release
+dotnet run --project mac/YtTranscript.Mac.csproj -c Release
 ```
 
 ## Whisper models
 
-The selected model is downloaded automatically from Hugging Face on first use and stored in `%LOCALAPPDATA%\YtPrepis\models`.
+The selected model is downloaded automatically from Hugging Face on first use and stored in `%LOCALAPPDATA%\YtTranscript\models`.
 
 | Model | Size | Note |
 |---|---|---|

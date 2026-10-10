@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace YtPrepis;
+namespace YtTranscript;
 
 /// <summary>
 /// Minimal UI localization (Slovenian / English) with the choice persisted per user.

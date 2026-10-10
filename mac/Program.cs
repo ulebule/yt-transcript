@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Themes.Fluent;
 
-namespace YtPrepis;
+namespace YtTranscript;
 
 internal static class Program
 {
@@ -20,7 +20,7 @@ public sealed class App : Application
 {
     public override void Initialize()
     {
-        Name = "YT Prepis";
+        Name = "YT Transcript";
         Styles.Add(new FluentTheme());
     }
 
