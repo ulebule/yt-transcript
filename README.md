@@ -19,7 +19,7 @@ Download the right file from [Releases](https://github.com/ulebule/yt-transcript
 | System | File |
 |---|---|
 | Windows 10/11 | `YtTranscript-Setup-x.y.z.exe` |
-| Mac with Apple Silicon (M1–M4) | `YtTranscript-x.y.z-mac-apple-silicon.dmg` |
+| Mac with Apple Silicon (M1 or newer) | `YtTranscript-x.y.z-mac-apple-silicon.dmg` |
 | Mac with Intel | `YtTranscript-x.y.z-mac-intel.dmg` |
 
 No admin rights and no .NET installation are required.
