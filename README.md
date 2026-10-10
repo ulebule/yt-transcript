@@ -10,7 +10,20 @@ Preprosta Windows aplikacija (.NET 8, WinForms), ki iz YouTube videa naredi prep
 
 Nič ne gre v oblak – vse teče na tvojem računalniku.
 
-## Zagon
+## Namestitev (za uporabnike)
+
+Prenesi `YtPrepis-Setup-x.y.z.exe` z [Releases](https://github.com/ulebule/yt-transcript/releases/latest) in ga zaženi. Administratorske pravice niso potrebne, .NET tudi ne.
+
+## Nova verzija
+
+Installer zgradi GitHub Actions. Za novo izdajo samo dodaj tag:
+
+```
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+## Zagon iz kode
 
 Potrebuješ [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) in Windows 10/11 (x64).
 
