@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- macOS end-to-end check used by CI: audio conversion + Whisper transcription -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>YtPrepis</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../TranscriptService.cs" Link="Core/TranscriptService.cs" />
+    <Compile Include="../../Loc.cs" Link="Core/Loc.cs" />
+    <Compile Include="../../Audio/AudioTools.cs" Link="Core/AudioTools.cs" />
+    <Compile Include="../../Audio/AudioConverter.Mac.cs" Link="Core/AudioConverter.Mac.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YoutubeExplode" Version="6.*" />
+    <PackageReference Include="Whisper.net" Version="1.*" />
+    <PackageReference Include="Whisper.net.Runtime" Version="1.*" />
+  </ItemGroup>
+
+</Project>

@@ -82,6 +82,7 @@ public static class L
             ["Error"] = "Napaka: {0}",
             ["Saved"] = "Shranjeno: {0}",
             ["TxtFilter"] = "Besedilo (*.txt)|*.txt",
+            ["TxtFilterName"] = "Besedilo",
 
             ["Lang.auto"] = "Samodejno", ["Lang.sl"] = "Slovenščina", ["Lang.en"] = "Angleščina",
             ["Lang.hr"] = "Hrvaščina", ["Lang.sr"] = "Srbščina", ["Lang.bs"] = "Bosanščina",
@@ -100,6 +101,7 @@ public static class L
             ["NoAudio"] = "Video nima zvočnega toka.",
             ["ConvertingAudio"] = "Pretvarjam zvok …",
             ["Transcribing"] = "Prepisujem z Whisperjem …",
+            ["TranscribingEta"] = "Prepisujem z Whisperjem … še približno {0}",
             ["DownloadingModel"] = "Prenašam model {0} (samo prvič) – {1} MB …",
             ["ConvertFailed"] = "Zvoka ni bilo mogoče pretvoriti. Namesti ffmpeg, ga dodaj v PATH in poskusi znova.",
         },
@@ -120,6 +122,7 @@ public static class L
             ["Error"] = "Error: {0}",
             ["Saved"] = "Saved: {0}",
             ["TxtFilter"] = "Text file (*.txt)|*.txt",
+            ["TxtFilterName"] = "Text file",
 
             ["Lang.auto"] = "Auto-detect", ["Lang.sl"] = "Slovenian", ["Lang.en"] = "English",
             ["Lang.hr"] = "Croatian", ["Lang.sr"] = "Serbian", ["Lang.bs"] = "Bosnian",
@@ -138,6 +141,7 @@ public static class L
             ["NoAudio"] = "The video has no audio stream.",
             ["ConvertingAudio"] = "Converting audio …",
             ["Transcribing"] = "Transcribing with Whisper …",
+            ["TranscribingEta"] = "Transcribing with Whisper … about {0} left",
             ["DownloadingModel"] = "Downloading model {0} (first time only) – {1} MB …",
             ["ConvertFailed"] = "Could not convert the audio. Install ffmpeg, add it to PATH and try again.",
         },

@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using NAudio.MediaFoundation;
-using NAudio.Wave;
 using Whisper.net;
 using YoutubeExplode;
 using YoutubeExplode.Videos;
@@ -13,7 +11,7 @@ namespace YtPrepis;
 
 public record TranscriptOptions(string Url, string Language, string Model, bool ForceWhisper);
 public record TranscriptResult(string Title, string Text, string Source);
-public record ProgressInfo(string Status, double? Percent);
+public record ProgressInfo(string Status, double? Percent, string? PartialText = null);
 
 public sealed class TranscriptService
 {
@@ -94,32 +92,61 @@ public sealed class TranscriptService
 
             p.Report(new(L.T("ConvertingAudio"), null));
             var wavPath = Path.Combine(tmp, "audio16k.wav");
-            await Task.Run(() => ConvertToWav16k(audioPath, wavPath), ct);
+            await Task.Run(() => AudioConverter.ToWav16k(audioPath, wavPath), ct);
 
-            double totalSec;
-            using (var r = new WaveFileReader(wavPath)) totalSec = r.TotalTime.TotalSeconds;
-
-            p.Report(new(L.T("Transcribing"), 0));
-            using var factory = WhisperFactory.FromPath(modelPath);
-            await using var processor = factory.CreateBuilder()
-                .WithLanguage(o.Language) // "auto" = automatic language detection
-                .Build();
-
-            var segments = new List<(TimeSpan, TimeSpan, string)>();
-            await using var wav = File.OpenRead(wavPath);
-            await foreach (var s in processor.ProcessAsync(wav, ct))
-            {
-                segments.Add((s.Start, s.End, s.Text));
-                if (totalSec > 0)
-                    p.Report(new(L.T("Transcribing"), Math.Min(100, s.End.TotalSeconds / totalSec * 100)));
-            }
-            return FormatParagraphs(segments);
+            return await TranscribeWavAsync(wavPath, o.Language, modelPath, p, ct);
         }
         finally
         {
             try { Directory.Delete(tmp, true); } catch { /* best effort */ }
         }
     }
+
+    /// <summary>Transcribes a 16 kHz mono WAV file, reporting progress, an ETA and the text so far.</summary>
+    public static async Task<string> TranscribeWavAsync(
+        string wavPath, string language, string modelPath, IProgress<ProgressInfo> p, CancellationToken ct)
+    {
+        var totalSec = AudioTools.WavDurationSeconds(wavPath);
+
+        p.Report(new(L.T("Transcribing"), 0));
+        using var factory = WhisperFactory.FromPath(modelPath);
+        await using var processor = factory.CreateBuilder()
+            .WithLanguage(language) // "auto" = automatic language detection
+            .Build();
+
+        var segments = new List<(TimeSpan, TimeSpan, string)>();
+        var clock = Stopwatch.StartNew();
+        var lastTextReport = TimeSpan.Zero;
+
+        await using var wav = File.OpenRead(wavPath);
+        await foreach (var s in processor.ProcessAsync(wav, ct))
+        {
+            segments.Add((s.Start, s.End, s.Text));
+
+            var pct = totalSec > 0 ? Math.Min(100, s.End.TotalSeconds / totalSec * 100) : (double?)null;
+            var status = L.T("Transcribing");
+            if (pct is > 1 && clock.Elapsed > TimeSpan.FromSeconds(10))
+            {
+                var left = TimeSpan.FromSeconds(clock.Elapsed.TotalSeconds * (100 - pct.Value) / pct.Value);
+                status = L.T("TranscribingEta", FormatDuration(left));
+            }
+
+            // the full text is re-rendered, so update it at most once a second
+            string? partial = null;
+            if (clock.Elapsed - lastTextReport > TimeSpan.FromSeconds(1))
+            {
+                partial = FormatParagraphs(segments);
+                lastTextReport = clock.Elapsed;
+            }
+            p.Report(new(status, pct, partial));
+        }
+        return FormatParagraphs(segments);
+    }
+
+    private static string FormatDuration(TimeSpan t) =>
+        t.TotalMinutes < 1 ? "< 1 min"
+        : t.TotalHours >= 1 ? $"{(int)t.TotalHours} h {t.Minutes:00} min"
+        : $"{(int)Math.Ceiling(t.TotalMinutes)} min";
 
     private static async Task<string> EnsureModelAsync(string model, IProgress<ProgressInfo> p, CancellationToken ct)
     {
@@ -150,38 +177,6 @@ public sealed class TranscriptService
         }
         File.Move(part, path, true);
         return path;
-    }
-
-    private static void ConvertToWav16k(string input, string output)
-    {
-        try
-        {
-            MediaFoundationApi.Startup();
-            using var reader = new MediaFoundationReader(input);
-            using var resampler = new MediaFoundationResampler(reader, new WaveFormat(16000, 16, 1)) { ResamplerQuality = 60 };
-            WaveFileWriter.CreateWaveFile(output, resampler);
-        }
-        catch (Exception mfEx)
-        {
-            if (!TryFfmpeg(input, output))
-                throw new InvalidOperationException(
-                    L.T("ConvertFailed"), mfEx);
-        }
-    }
-
-    private static bool TryFfmpeg(string input, string output)
-    {
-        var psi = new ProcessStartInfo("ffmpeg") { UseShellExecute = false, CreateNoWindow = true };
-        foreach (var a in new[] { "-y", "-i", input, "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", output })
-            psi.ArgumentList.Add(a);
-        try
-        {
-            using var proc = Process.Start(psi);
-            if (proc is null) return false;
-            proc.WaitForExit();
-            return proc.ExitCode == 0 && File.Exists(output);
-        }
-        catch (System.ComponentModel.Win32Exception) { return false; } // ffmpeg is not installed
     }
 
     // ---------- shared: segments -> paragraphs ----------

@@ -1,4 +1,4 @@
-name: Build installer
+name: Build
 
 on:
   push:
@@ -10,37 +10,46 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: windows-latest
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
     steps:
       - uses: actions/checkout@v5
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            v="${GITHUB_REF_NAME#v}"; release=true
+          else
+            # version comes from <Version> in Directory.Build.props
+            v=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -1)
+            # release automatically when a new version lands on main
+            if [ "$GITHUB_REF_NAME" = "main" ] && ! gh release view "v$v" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              release=true
+            else
+              release=false
+            fi
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "Version $v, release: $release"
 
+  windows:
+    needs: version
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
 
-      - name: Determine version
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if ($env:GITHUB_REF_TYPE -eq 'tag') {
-            $v = $env:GITHUB_REF_NAME.TrimStart('v')
-            $release = 'true'
-          } else {
-            # version comes from <Version> in YtPrepis.csproj
-            $v = ([xml](Get-Content YtPrepis.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-            # release automatically when a new version lands on main
-            gh release view "v$v" --repo $env:GITHUB_REPOSITORY *> $null
-            $release = if ($LASTEXITCODE -ne 0 -and $env:GITHUB_REF_NAME -eq 'main') { 'true' } else { 'false' }
-          }
-          "VERSION=$v" >> $env:GITHUB_ENV
-          "RELEASE=$release" >> $env:GITHUB_ENV
-          Write-Host "Version $v, release: $release"
-          exit 0  # "gh release view" fails when no release exists yet; that is expected
-
       - name: Publish (self-contained, win-x64)
-        run: dotnet publish YtPrepis.csproj -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish
+        run: dotnet publish YtPrepis.csproj -c Release -r win-x64 --self-contained true -o publish
 
       - name: Install Inno Setup (if missing)
         shell: pwsh
@@ -54,15 +63,79 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: YtPrepis-Setup-${{ env.VERSION }}
+          name: windows
           path: installer/Output/*.exe
 
-      - name: GitHub Release
-        if: env.RELEASE == 'true'
-        uses: softprops/action-gh-release@v2
+  mac:
+    needs: version
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [osx-arm64, osx-x64]
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
         with:
-          tag_name: v${{ env.VERSION }}
+          dotnet-version: "8.0.x"
+
+      - name: Smoke test (YouTube-style fragmented MP4 → WAV → Whisper)
+        if: matrix.rid == 'osx-arm64'
+        run: |
+          say -o hello.aiff "Hello. This is a short test of the transcription app."
+          brew install --quiet ffmpeg
+          # YouTube serves fragmented MP4 audio, so test with exactly that
+          ffmpeg -loglevel error -i hello.aiff -ac 2 -ar 44100 -c:a aac \
+            -movflags frag_keyframe+empty_moov+default_base_moof -f mp4 hello.mp4
+          curl -sSL -o ggml-tiny.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin
+          # make sure the built-in macOS tools do the conversion, not ffmpeg
+          YTPREPIS_NO_FFMPEG=1 dotnet run --project tests/SmokeTest -c Release -- hello.mp4 ggml-tiny.bin test
+
+      - name: Publish (self-contained, ${{ matrix.rid }})
+        run: dotnet publish mac/YtPrepis.Mac.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o publish
+
+      - name: Build .app and .dmg
+        run: |
+          chmod +x installer/mac/make-dmg.sh
+          installer/mac/make-dmg.sh "$VERSION" "${{ matrix.rid }}" publish dist
+
+      - name: Check that the app starts
+        if: matrix.rid == 'osx-arm64'
+        run: |
+          hdiutil attach -nobrowse -mountpoint /tmp/ytprepis dist/*.dmg
+          "/tmp/ytprepis/YT Prepis.app/Contents/MacOS/YtPrepis" > app.log 2>&1 &
+          pid=$!
+          sleep 10
+          if kill -0 $pid 2>/dev/null; then
+            echo "App is running"; kill $pid
+          else
+            echo "::error::App exited on start: $(tr '\n' ' ' < app.log | cut -c1-900)"; exit 1
+          fi
+          hdiutil detach /tmp/ytprepis
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-${{ matrix.rid }}
+          path: dist/*.dmg
+
+  release:
+    needs: [version, windows, mac]
+    if: needs.version.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.version.outputs.version }}
           target_commitish: ${{ github.sha }}
-          name: YT Prepis ${{ env.VERSION }}
-          files: installer/Output/*.exe
+          name: YT Prepis ${{ needs.version.outputs.version }}
+          files: |
+            dist/*.exe
+            dist/*.dmg
           generate_release_notes: true

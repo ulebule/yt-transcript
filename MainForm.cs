@@ -140,6 +140,12 @@ public sealed class MainForm : Form
         var progress = new Progress<ProgressInfo>(pi =>
         {
             SetStatus(pi.Status);
+            if (pi.PartialText is not null)
+            {
+                _output.Text = pi.PartialText;
+                _output.SelectionStart = _output.TextLength;
+                _output.ScrollToCaret();
+            }
             if (pi.Percent is double pct)
             {
                 _progress.Style = ProgressBarStyle.Blocks;

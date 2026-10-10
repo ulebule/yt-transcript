@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>YtPrepis</RootNamespace>
+    <AssemblyName>YtPrepis</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- shared core -->
+    <Compile Include="../TranscriptService.cs" Link="Core/TranscriptService.cs" />
+    <Compile Include="../Loc.cs" Link="Core/Loc.cs" />
+    <Compile Include="../Audio/AudioTools.cs" Link="Core/AudioTools.cs" />
+    <Compile Include="../Audio/AudioConverter.Mac.cs" Link="Core/AudioConverter.Mac.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.*" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.*" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.*" />
+    <PackageReference Include="YoutubeExplode" Version="6.*" />
+    <PackageReference Include="Whisper.net" Version="1.*" />
+    <PackageReference Include="Whisper.net.Runtime" Version="1.*" />
+  </ItemGroup>
+
+</Project>

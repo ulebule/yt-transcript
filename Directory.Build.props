@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- App version for Windows and macOS. Bump it on main to publish a new GitHub release automatically. -->
+    <Version>1.1.0</Version>
+  </PropertyGroup>
+</Project>
