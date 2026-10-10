@@ -9,9 +9,9 @@ var failures = new List<string>();
 // 0) conversion diagnostics (shown as annotations, because CI logs are not always readable)
 var probe = Path.Combine(Path.GetTempPath(), $"probe-{Guid.NewGuid():N}.wav");
 AudioConverter.ToWav16k(input, probe);
-var pcm = File.ReadAllBytes(probe).AsSpan(44);
+var pcm = File.ReadAllBytes(probe);
 int peak = 0;
-for (var i = 0; i + 1 < pcm.Length; i += 2) peak = Math.Max(peak, Math.Abs((int)BitConverter.ToInt16(pcm.Slice(i, 2))));
+for (var i = 44; i + 1 < pcm.Length; i += 2) peak = Math.Max(peak, Math.Abs((int)BitConverter.ToInt16(pcm, i)));
 Console.WriteLine($"::notice::Converted WAV: {AudioTools.WavDurationSeconds(probe):F1} s, peak {peak}");
 if (peak < 500) failures.Add($"Converted audio is silent (peak {peak}).");
 
