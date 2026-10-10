@@ -20,7 +20,7 @@ The installer is not code-signed, so Windows SmartScreen may show a warning on f
 
 ## Releasing a new version
 
-The installer is built by GitHub Actions. To publish a new release, create a release on GitHub with a new tag (e.g. `v1.0.1`). The workflow builds the installer and attaches it to the release automatically.
+The installer is built by GitHub Actions. To publish a new release, bump `<Version>` in `YtPrepis.csproj` (e.g. to `1.0.1`) and push to `main`. The workflow builds the installer, creates the `v1.0.1` tag and release, and attaches the installer automatically. Pushing a `v*` tag works too.
 
 ## Running from source
 
