@@ -37,6 +37,7 @@ jobs:
           "VERSION=$v" >> $env:GITHUB_ENV
           "RELEASE=$release" >> $env:GITHUB_ENV
           Write-Host "Version $v, release: $release"
+          exit 0  # "gh release view" fails when no release exists yet; that is expected
 
       - name: Publish (self-contained, win-x64)
         run: dotnet publish YtPrepis.csproj -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish
