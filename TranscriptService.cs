@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -182,7 +181,7 @@ public sealed class TranscriptService
             proc.WaitForExit();
             return proc.ExitCode == 0 && File.Exists(output);
         }
-        catch (Win32Exception) { return false; } // ffmpeg ni nameščen
+        catch (System.ComponentModel.Win32Exception) { return false; } // ffmpeg ni nameščen
     }
 
     // ---------- skupno: segmenti -> odstavki ----------
