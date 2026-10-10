@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Include="../../TranscriptService.cs" Link="Core/TranscriptService.cs" />
     <Compile Include="../../Loc.cs" Link="Core/Loc.cs" />
+    <Compile Include="../../Subtitles.cs" Link="Core/Subtitles.cs" />
     <Compile Include="../../Audio/AudioTools.cs" Link="Core/AudioTools.cs" />
     <Compile Include="../../Audio/AudioConverter.Mac.cs" Link="Core/AudioConverter.Mac.cs" />
   </ItemGroup>

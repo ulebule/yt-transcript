@@ -81,17 +81,16 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Smoke test (YouTube-style fragmented MP4 → WAV → Whisper)
+      - name: Smoke test (local video file → WAV → Whisper → TXT/SRT)
         if: matrix.rid == 'osx-arm64'
         run: |
           say -o hello.aiff "Hello. This is a short test of the transcription app."
           brew install --quiet ffmpeg
-          # YouTube serves fragmented MP4 audio, so test with exactly that
-          ffmpeg -loglevel error -i hello.aiff -ac 2 -ar 44100 -c:a aac \
-            -movflags frag_keyframe+empty_moov+default_base_moof -f mp4 hello.mp4
-          curl -sSL -o ggml-tiny.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin
+          # a video file with an AAC audio track, like a phone or screen recording
+          ffmpeg -loglevel error -f lavfi -i color=c=black:s=320x240:r=10 -i hello.aiff \
+            -shortest -c:v libx264 -pix_fmt yuv420p -c:a aac -ac 2 -ar 44100 "test video.mp4"
           # make sure the built-in macOS tools do the conversion, not ffmpeg
-          YTTRANSCRIPT_NO_FFMPEG=1 dotnet run --project tests/SmokeTest -c Release -- hello.mp4 ggml-tiny.bin test
+          YTTRANSCRIPT_NO_FFMPEG=1 dotnet run --project tests/SmokeTest -c Release -- "$PWD/test video.mp4" test
 
       - name: Publish (self-contained, ${{ matrix.rid }})
         run: dotnet publish mac/YtTranscript.Mac.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o publish

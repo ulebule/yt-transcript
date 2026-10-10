@@ -17,7 +17,8 @@ public sealed class MainForm : Form
     private readonly Label _uiLangLabel = MakeLabel();
     private readonly ComboBox _uiLang = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 130 };
     private readonly Label _urlLabel = MakeLabel();
-    private readonly TextBox _url = new() { Dock = DockStyle.Fill, PlaceholderText = "https://www.youtube.com/watch?v=…" };
+    private readonly TextBox _url = new() { Dock = DockStyle.Fill, AllowDrop = true };
+    private readonly Button _browse = new() { AutoSize = true, Margin = new Padding(6, 2, 3, 3) };
     private readonly Label _langLabel = MakeLabel();
     private readonly ComboBox _lang = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 150 };
     private readonly Label _modelLabel = MakeLabel();
@@ -34,10 +35,12 @@ public sealed class MainForm : Form
     };
     private readonly Button _copy = new() { AutoSize = true, Enabled = false };
     private readonly Button _save = new() { AutoSize = true, Enabled = false };
+    private readonly Button _saveSrt = new() { AutoSize = true, Enabled = false };
 
     private readonly TranscriptService _service = new();
     private CancellationTokenSource? _cts;
     private string _title = "transcript";
+    private IReadOnlyList<Segment> _segments = Array.Empty<Segment>();
     private bool _statusIsReady = true;
 
     public MainForm()
@@ -71,11 +74,13 @@ public sealed class MainForm : Form
         uiRow.Controls.Add(_uiLang);
         uiRow.Controls.Add(_uiLangLabel);
 
-        var urlRow = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2 };
+        var urlRow = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 3 };
         urlRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         urlRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        urlRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         urlRow.Controls.Add(_urlLabel, 0, 0);
         urlRow.Controls.Add(_url, 1, 0);
+        urlRow.Controls.Add(_browse, 2, 0);
 
         layout.Controls.Add(uiRow, 0, 0);
         layout.Controls.Add(urlRow, 0, 1);
@@ -83,14 +88,30 @@ public sealed class MainForm : Form
         layout.Controls.Add(Flow(_run, _cancel, _progress), 0, 3);
         layout.Controls.Add(_status, 0, 4);
         layout.Controls.Add(_output, 0, 5);
-        layout.Controls.Add(Flow(_copy, _save), 0, 6);
+        layout.Controls.Add(Flow(_copy, _save, _saveSrt), 0, 6);
         Controls.Add(layout);
 
         AcceptButton = _run;
         _run.Click += async (_, _) => await RunAsync();
         _cancel.Click += (_, _) => _cts?.Cancel();
         _copy.Click += (_, _) => { if (_output.TextLength > 0) Clipboard.SetText(_output.Text); };
-        _save.Click += (_, _) => Save();
+        _save.Click += (_, _) => Save(srt: false);
+        _saveSrt.Click += (_, _) => Save(srt: true);
+        _browse.Click += (_, _) => Browse();
+
+        // drop an audio/video file onto the window or the input box
+        AllowDrop = true;
+        foreach (Control c in new Control[] { this, _url })
+        {
+            c.DragEnter += (_, e) =>
+            {
+                if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true && _run.Enabled) e.Effect = DragDropEffects.Copy;
+            };
+            c.DragDrop += (_, e) =>
+            {
+                if (e.Data?.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } files) _url.Text = files[0];
+            };
+        }
         _uiLang.SelectedIndexChanged += (_, _) => L.Set(((Item)_uiLang.SelectedItem!).Code);
 
         L.Changed += ApplyLanguage;
@@ -103,6 +124,9 @@ public sealed class MainForm : Form
         SuspendLayout();
         _uiLangLabel.Text = L.T("UiLanguage");
         _urlLabel.Text = L.T("Url");
+        _url.PlaceholderText = L.T("UrlPlaceholder");
+        _browse.Text = L.T("Browse");
+        _saveSrt.Text = L.T("SaveSrt");
         _langLabel.Text = L.T("VideoLanguage");
         _modelLabel.Text = L.T("Model");
         _forceWhisper.Text = L.T("ForceWhisper");
@@ -134,6 +158,7 @@ public sealed class MainForm : Form
         if (string.IsNullOrWhiteSpace(_url.Text)) { _url.Focus(); return; }
 
         _cts = new CancellationTokenSource();
+        _segments = Array.Empty<Segment>();
         SetBusy(true);
         _output.Clear();
 
@@ -164,6 +189,7 @@ public sealed class MainForm : Form
         {
             var result = await Task.Run(() => _service.RunAsync(options, progress, _cts.Token));
             _title = result.Title;
+            _segments = result.Segments;
             _output.Text = result.Text;
             SetStatus(L.T("Done", result.Title, result.Source));
             _progress.Style = ProgressBarStyle.Blocks;
@@ -179,18 +205,25 @@ public sealed class MainForm : Form
         }
     }
 
-    private void Save()
+    private void Browse()
+    {
+        using var dlg = new OpenFileDialog { Filter = L.T("MediaFilter") };
+        if (dlg.ShowDialog(this) == DialogResult.OK) _url.Text = dlg.FileName;
+    }
+
+    private void Save(bool srt)
     {
         using var dlg = new SaveFileDialog
         {
-            Filter = L.T("TxtFilter"),
-            FileName = SafeFileName(_title) + ".txt",
+            Filter = L.T(srt ? "SrtFilter" : "TxtFilter"),
+            FileName = SafeFileName(_title) + (srt ? ".srt" : ".txt"),
         };
-        if (dlg.ShowDialog(this) == DialogResult.OK)
-        {
-            File.WriteAllText(dlg.FileName, _output.Text, new UTF8Encoding(true));
-            SetStatus(L.T("Saved", dlg.FileName));
-        }
+        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+        // SRT is built from the timed segments; the .txt keeps any edits made in the text box
+        var content = srt ? Subtitles.ToSrt(_segments) : _output.Text;
+        File.WriteAllText(dlg.FileName, content, new UTF8Encoding(true));
+        SetStatus(L.T("Saved", dlg.FileName));
     }
 
     private void SetStatus(string text)
@@ -201,9 +234,10 @@ public sealed class MainForm : Form
 
     private void SetBusy(bool busy)
     {
-        _run.Enabled = _url.Enabled = _lang.Enabled = _model.Enabled = _forceWhisper.Enabled = _uiLang.Enabled = !busy;
+        _run.Enabled = _url.Enabled = _browse.Enabled = _lang.Enabled = _model.Enabled = _forceWhisper.Enabled = _uiLang.Enabled = !busy;
         _cancel.Enabled = busy;
         _copy.Enabled = _save.Enabled = !busy && _output.TextLength > 0;
+        _saveSrt.Enabled = !busy && _segments.Count > 0;
         UseWaitCursor = busy;
     }
 

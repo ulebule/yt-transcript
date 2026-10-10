@@ -1,12 +1,15 @@
 # YT Transcript
 
-A simple desktop app for **Windows and macOS** that turns a YouTube video into a plain-text transcript (.txt).
+A simple desktop app for **Windows and macOS** that turns a YouTube video or a local audio/video file into a transcript (.txt) or subtitles (.srt).
 
 ## How it works
 
-1. It first tries to use the video's **existing YouTube captions** (manually created captions take priority over auto-generated ones).
-2. If there are none (or if *Always use Whisper* is checked), it downloads the audio and **transcribes it locally with Whisper** ([whisper.cpp](https://github.com/ggerganov/whisper.cpp) via [Whisper.net](https://github.com/sandrohanea/whisper.net)).
-3. The text is split into paragraphs based on pauses in speech, and you can copy it or save it as a .txt file (UTF-8).
+1. **Input:** paste a YouTube link, or choose a local audio/video file (*Browse …* or drag and drop it onto the window). Supported: mp3, m4a, wav, flac, mp4, mov and more; anything else works if `ffmpeg` is installed.
+2. For YouTube links it first tries the video's **existing captions** (manually created captions take priority over auto-generated ones).
+3. Otherwise (or if *Always use Whisper* is checked, or for local files) it **transcribes the audio locally with Whisper** ([whisper.cpp](https://github.com/ggerganov/whisper.cpp) via [Whisper.net](https://github.com/sandrohanea/whisper.net)).
+4. **Output:**
+   - **.txt**: plain text split into paragraphs by pauses in speech (UTF-8). You can edit it in the app before saving.
+   - **.srt**: SubRip subtitles with timecodes, at most 2 lines of 42 characters per subtitle. Long segments are split, and overlapping auto-captions are fixed.
 
 Nothing is sent to the cloud – everything runs on your own computer.
 
@@ -36,13 +39,13 @@ On Apple Silicon, Whisper runs on the GPU (Metal), so transcription is much fast
 
 ## Releasing a new version
 
-Everything is built by GitHub Actions. To publish a new release, bump `<Version>` in `Directory.Build.props` (e.g. to `1.1.1`) and push to `main`. The workflow builds the Windows installer and both macOS .dmg files, runs a macOS smoke test (audio conversion + Whisper), and creates the release with all files attached. Pushing a `v*` tag works too.
+Everything is built by GitHub Actions. To publish a new release, bump `<Version>` in `Directory.Build.props` (e.g. to `1.1.1`) and push to `main`. The workflow builds the Windows installer and both macOS .dmg files, runs a macOS smoke test (local video file → Whisper → TXT/SRT), and creates the release with all files attached. Pushing a `v*` tag works too.
 
 ## Project layout
 
 | Path | What |
 |---|---|
-| `TranscriptService.cs`, `Loc.cs`, `Audio/` | shared core: YouTube, Whisper, audio conversion, UI strings |
+| `TranscriptService.cs`, `Subtitles.cs`, `Loc.cs`, `Audio/` | shared core: YouTube, Whisper, SRT export, audio conversion, UI strings |
 | `YtTranscript.csproj`, `MainForm.cs` | Windows app (WinForms) |
 | `mac/` | macOS app (Avalonia) |
 | `tests/SmokeTest/` | macOS end-to-end check used by CI |
