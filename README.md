@@ -1,4 +1,4 @@
-# YT Prepis
+# YT Transcript
 
 A simple Windows app (.NET 8, WinForms) that turns a YouTube video into a plain-text transcript (.txt).
 
