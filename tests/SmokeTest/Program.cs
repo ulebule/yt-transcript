@@ -6,15 +6,24 @@ using YtTranscript;
 var (input, expected) = (args[0], args[1]);
 var failures = new List<string>();
 
+// 0) conversion diagnostics (shown as annotations, because CI logs are not always readable)
+var probe = Path.Combine(Path.GetTempPath(), $"probe-{Guid.NewGuid():N}.wav");
+AudioConverter.ToWav16k(input, probe);
+var pcm = File.ReadAllBytes(probe).AsSpan(44);
+int peak = 0;
+for (var i = 0; i + 1 < pcm.Length; i += 2) peak = Math.Max(peak, Math.Abs((int)BitConverter.ToInt16(pcm.Slice(i, 2))));
+Console.WriteLine($"::notice::Converted WAV: {AudioTools.WavDurationSeconds(probe):F1} s, peak {peak}");
+if (peak < 500) failures.Add($"Converted audio is silent (peak {peak}).");
+
 // 1) full pipeline on a local file: model download, conversion, Whisper
 var result = await new TranscriptService().RunAsync(
     new TranscriptOptions(input, "en", "tiny", ForceWhisper: false),
-    new Progress<ProgressInfo>(p => Console.WriteLine($"  {p.Status} {p.Percent:F0}")),
+    new Progress<ProgressInfo>(_ => { }),
     CancellationToken.None);
 
 Console.WriteLine($"Title: {result.Title}");
 Console.WriteLine($"Source: {result.Source}");
-Console.WriteLine($"Transcript: {result.Text}");
+Console.WriteLine($"::notice::Transcript ({result.Segments.Count} segments): {result.Text}");
 if (!result.Text.Contains(expected, StringComparison.OrdinalIgnoreCase))
     failures.Add($"Transcript does not contain '{expected}': {result.Text}");
 

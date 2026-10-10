@@ -13,19 +13,41 @@ internal static class AudioConverter
     {
         var errors = new List<string>();
 
-        if (!TryAfconvert(input, output, errors))
+        // 1) Core Audio directly (audio files)
+        if (TryAfconvert(input, output, errors) && Usable(output, errors, "afconvert")) return;
+
+        // 2) AVFoundation extracts the audio track first: video files, and fragmented MP4 from YouTube
+        var m4a = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, $"extracted-{Guid.NewGuid():N}.m4a");
+        try
         {
-            // YouTube serves fragmented MP4; AVFoundation reads it even when Core Audio does not.
-            var m4a = Path.Combine(Path.GetDirectoryName(output)!, "remuxed.m4a");
             var (exit, err) = AudioTools.Run(Avconvert, "--source", input, "--preset", "PresetAppleM4A", "--output", m4a);
             if (exit != 0) errors.Add("avconvert: " + err);
-
-            var ok = exit == 0 && File.Exists(m4a) && TryAfconvert(m4a, output, errors);
-            if (!ok && !AudioTools.TryFfmpeg(input, output))
-                throw new InvalidOperationException(L.T("ConvertFailed") + Environment.NewLine + string.Join(Environment.NewLine, errors));
+            if (exit == 0 && File.Exists(m4a) && TryAfconvert(m4a, output, errors) && Usable(output, errors, "avconvert")) return;
+        }
+        finally
+        {
+            try { File.Delete(m4a); } catch { /* best effort */ }
         }
 
-        AudioTools.NormalizeWav(output);
+        // 3) ffmpeg, if installed (mkv, webm, …)
+        if (AudioTools.TryFfmpeg(input, output) && Usable(output, errors, "ffmpeg")) return;
+
+        throw new InvalidOperationException(L.T("ConvertFailed") + Environment.NewLine + string.Join(Environment.NewLine, errors));
+    }
+
+    private static bool Usable(string wav, List<string> errors, string tool)
+    {
+        try
+        {
+            AudioTools.NormalizeWav(wav);
+            if (!AudioTools.LooksSilent(wav)) return true;
+            errors.Add($"{tool}: output is silent");
+        }
+        catch (Exception ex)
+        {
+            errors.Add($"{tool}: {ex.Message}");
+        }
+        return false;
     }
 
     private static bool TryAfconvert(string input, string output, List<string> errors)

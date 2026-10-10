@@ -50,6 +50,29 @@ internal static class AudioTools
         return false;
     }
 
+    /// <summary>
+    /// True if a 16-bit PCM WAV file seems to contain no sound. Samples up to 64 blocks spread over the file,
+    /// so it stays fast for multi-hour recordings.
+    /// </summary>
+    public static bool LooksSilent(string path, int threshold = 300)
+    {
+        using var fs = File.OpenRead(path);
+        var length = fs.Length - 44;
+        if (length <= 0) return true;
+
+        const int block = 64 * 1024;
+        var buf = new byte[block];
+        var blocks = (int)Math.Min(64, Math.Max(1, length / block));
+        for (var b = 0; b < blocks; b++)
+        {
+            fs.Position = 44 + (length / blocks * b & ~1L);
+            var n = fs.Read(buf, 0, block) & ~1;
+            for (var i = 0; i < n; i += 2)
+                if (Math.Abs((int)BitConverter.ToInt16(buf, i)) > threshold) return false;
+        }
+        return true;
+    }
+
     /// <summary>Approximate duration of a 16 kHz, 16-bit mono WAV file.</summary>
     public static double WavDurationSeconds(string path) =>
         Math.Max(0, new FileInfo(path).Length - 44) / (double)(SampleRate * 2);

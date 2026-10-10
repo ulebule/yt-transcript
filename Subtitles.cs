@@ -46,13 +46,15 @@ public static class Subtitles
             yield break;
         }
 
-        // greedy word packing into chunks that fit in two lines
+        // word packing into chunks of similar length that fit in two lines (avoids a tiny last chunk)
+        var parts = (int)Math.Ceiling(s.Text.Length / (double)maxChars);
+        var target = Math.Min(maxChars, (int)Math.Ceiling(s.Text.Length / (double)parts) + 8);
         var chunks = new List<string>();
         var current = "";
         foreach (var word in s.Text.Split(' '))
         {
             var candidate = current.Length == 0 ? word : current + " " + word;
-            if (current.Length > 0 && (candidate.Length > maxChars || Wrap(candidate).Count > MaxLines))
+            if (current.Length > 0 && (candidate.Length > target || Wrap(candidate).Count > MaxLines))
             {
                 chunks.Add(current);
                 current = word;
@@ -74,20 +76,27 @@ public static class Subtitles
         }
     }
 
-    /// <summary>Removes overlaps (common in auto-generated YouTube captions) and gives short cues a readable minimum duration.</summary>
+    /// <summary>
+    /// Removes overlaps (common in auto-generated YouTube captions and Whisper output) and gives short cues
+    /// a readable minimum duration. Cues stay in order; a cue that would start before the previous one ends is pushed back.
+    /// </summary>
     private static void FixTiming(List<Segment> cues)
     {
+        var shortest = TimeSpan.FromMilliseconds(300);
+        var prevEnd = TimeSpan.MinValue;
         for (var i = 0; i < cues.Count; i++)
         {
             var c = cues[i];
-            var end = c.End;
-            if (end - c.Start < MinDuration) end = c.Start + MinDuration;
+            var start = i == 0 ? c.Start : Max(c.Start, prevEnd + MinGap);
+            var end = Max(c.End, start + MinDuration);
             if (i + 1 < cues.Count && end > cues[i + 1].Start - MinGap)
-                end = cues[i + 1].Start - MinGap;
-            if (end <= c.Start) end = c.Start + TimeSpan.FromMilliseconds(500);
-            cues[i] = c with { End = end };
+                end = Max(cues[i + 1].Start - MinGap, start + shortest);
+            cues[i] = c with { Start = start, End = end };
+            prevEnd = end;
         }
     }
+
+    private static TimeSpan Max(TimeSpan a, TimeSpan b) => a > b ? a : b;
 
     /// <summary>Wraps text into lines of at most <see cref="MaxLineLength"/> characters, balancing two-line cues.</summary>
     public static List<string> Wrap(string text)
