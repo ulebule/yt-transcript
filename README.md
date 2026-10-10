@@ -5,12 +5,12 @@ A simple Windows app (.NET 8, WinForms) that turns a YouTube video into a plain-
 ## How it works
 
 1. It first tries to use the video's **existing YouTube captions** (manually created captions take priority over auto-generated ones).
-2. If there are none (or if *Vedno uporabi Whisper* / "Always use Whisper" is checked), it downloads the audio and **transcribes it locally with Whisper** ([whisper.cpp](https://github.com/ggerganov/whisper.cpp) via [Whisper.net](https://github.com/sandrohanea/whisper.net)).
+2. If there are none (or if *Always use Whisper* is checked), it downloads the audio and **transcribes it locally with Whisper** ([whisper.cpp](https://github.com/ggerganov/whisper.cpp) via [Whisper.net](https://github.com/sandrohanea/whisper.net)).
 3. The text is split into paragraphs based on pauses in speech, and you can copy it or save it as a .txt file (UTF-8).
 
 Nothing is sent to the cloud – everything runs on your own computer.
 
-The user interface is in Slovenian.
+The user interface is available in English and Slovenian. It follows your Windows language by default and can be switched in the top-right corner; the choice is remembered.
 
 ## Installation (for users)
 
