@@ -19,7 +19,7 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Določi verzijo
+      - name: Determine version
         shell: pwsh
         run: |
           if ($env:GITHUB_REF_TYPE -eq 'tag') { $v = $env:GITHUB_REF_NAME.TrimStart('v') }
@@ -29,13 +29,13 @@ jobs:
       - name: Publish (self-contained, win-x64)
         run: dotnet publish YtPrepis.csproj -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -o publish
 
-      - name: Namesti Inno Setup (če ga ni)
+      - name: Install Inno Setup (if missing)
         shell: pwsh
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
 
-      - name: Zgradi installer
+      - name: Build installer
         shell: pwsh
         run: '& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DMyAppVersion=${{ env.VERSION }} installer\YtPrepis.iss'
 

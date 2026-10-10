@@ -1,5 +1,5 @@
-; Inno Setup skripta za YT Prepis
-; Gradi jo GitHub Actions (.github/workflows/build.yml), ročno pa:
+; Inno Setup script for YT Prepis
+; Built by GitHub Actions (.github/workflows/build.yml). To build manually:
 ;   dotnet publish -c Release -r win-x64 --self-contained -o publish
 ;   iscc /DMyAppVersion=1.0.0 installer\YtPrepis.iss
 
@@ -20,7 +20,7 @@ AppSupportURL=https://github.com/ulebule/yt-transcript/issues
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-; namestitev brez administratorskih pravic (lahko pa jih uporabnik izbere)
+; per-user install without admin rights (the user can still choose an all-users install)
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed=x64

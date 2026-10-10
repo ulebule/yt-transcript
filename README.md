@@ -1,61 +1,60 @@
 # YT Prepis
 
-Preprosta Windows aplikacija (.NET 8, WinForms), ki iz YouTube videa naredi prepis v navadnem besedilu (.txt).
+A simple Windows app (.NET 8, WinForms) that turns a YouTube video into a plain-text transcript (.txt).
 
-## Kako deluje
+## How it works
 
-1. Najprej poskusi vzeti **obstoječe YouTube podnapise** (ročni imajo prednost pred samodejnimi).
-2. Če jih ni (ali če obkljukaš *Vedno uporabi Whisper*), prenese zvok in ga **lokalno prepiše z Whisperjem** ([whisper.cpp](https://github.com/ggerganov/whisper.cpp) prek [Whisper.net](https://github.com/sandrohanea/whisper.net)).
-3. Besedilo razdeli na odstavke glede na premore v govoru in ga lahko kopiraš ali shraniš kot .txt (UTF-8).
+1. It first tries to use the video's **existing YouTube captions** (manually created captions take priority over auto-generated ones).
+2. If there are none (or if *Vedno uporabi Whisper* / "Always use Whisper" is checked), it downloads the audio and **transcribes it locally with Whisper** ([whisper.cpp](https://github.com/ggerganov/whisper.cpp) via [Whisper.net](https://github.com/sandrohanea/whisper.net)).
+3. The text is split into paragraphs based on pauses in speech, and you can copy it or save it as a .txt file (UTF-8).
 
-Nič ne gre v oblak – vse teče na tvojem računalniku.
+Nothing is sent to the cloud – everything runs on your own computer.
 
-## Namestitev (za uporabnike)
+The user interface is in Slovenian.
 
-Prenesi `YtPrepis-Setup-x.y.z.exe` z [Releases](https://github.com/ulebule/yt-transcript/releases/latest) in ga zaženi. Administratorske pravice niso potrebne, .NET tudi ne.
+## Installation (for users)
 
-## Nova verzija
+Download `YtPrepis-Setup-x.y.z.exe` from [Releases](https://github.com/ulebule/yt-transcript/releases/latest) and run it. No admin rights and no .NET installation are required.
 
-Installer zgradi GitHub Actions. Za novo izdajo samo dodaj tag:
+The installer is not code-signed, so Windows SmartScreen may show a warning on first run. Click *More info* → *Run anyway*.
 
-```
-git tag v1.0.1
-git push origin v1.0.1
-```
+## Releasing a new version
 
-## Zagon iz kode
+The installer is built by GitHub Actions. To publish a new release, create a release on GitHub with a new tag (e.g. `v1.0.1`). The workflow builds the installer and attaches it to the release automatically.
 
-Potrebuješ [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) in Windows 10/11 (x64).
+## Running from source
+
+You need the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) and Windows 10/11 (x64).
 
 ```
 dotnet run -c Release
 ```
 
-ali pa naredi samostojen .exe:
+To build a self-contained version:
 
 ```
-dotnet publish -c Release -r win-x64 --self-contained
+dotnet publish -c Release -r win-x64 --self-contained -o publish
 ```
 
-## Whisper modeli
+## Whisper models
 
-Model se ob prvi uporabi samodejno prenese s Hugging Face v `%LOCALAPPDATA%\YtPrepis\models`.
+The selected model is downloaded automatically from Hugging Face on first use and stored in `%LOCALAPPDATA%\YtPrepis\models`.
 
-| Model | Velikost | Opomba |
+| Model | Size | Note |
 |---|---|---|
-| tiny | 75 MB | zelo hitro, slabše |
+| tiny | 75 MB | very fast, lower quality |
 | base | 142 MB | |
-| small | 466 MB | privzeto |
-| medium | 1,5 GB | precej boljše za slovenščino |
-| large-v3-turbo | 1,6 GB | najboljše, počasneje na CPU |
+| small | 466 MB | default |
+| medium | 1.5 GB | noticeably better for Slovenian |
+| large-v3-turbo | 1.6 GB | best quality, slower on CPU |
 
-## Opombe
+## Notes
 
-- Pretvorba zvoka uporablja Windows Media Foundation. Če ta odpove, aplikacija poskusi z `ffmpeg` (če je v PATH).
-- Če YouTube kaj spremeni in prenos neha delovati, posodobi paket: `dotnet add package YoutubeExplode`.
+- Audio conversion uses Windows Media Foundation. If that fails, the app falls back to `ffmpeg` (if it is on your PATH).
+- If YouTube changes something and downloads stop working, update the package: `dotnet add package YoutubeExplode`.
 
-## Knjižnice
+## Libraries
 
-- [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode) – podnapisi in prenos zvoka
-- [Whisper.net](https://github.com/sandrohanea/whisper.net) – prepoznava govora
-- [NAudio](https://github.com/naudio/NAudio) – pretvorba zvoka
+- [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode) – captions and audio download
+- [Whisper.net](https://github.com/sandrohanea/whisper.net) – speech recognition
+- [NAudio](https://github.com/naudio/NAudio) – audio conversion

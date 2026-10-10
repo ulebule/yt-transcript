@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- YouTube se pogosto spreminja, zato vedno najnovejša 6.x -->
+    <!-- YouTube changes often, so always use the latest 6.x -->
     <PackageReference Include="YoutubeExplode" Version="6.*" />
     <PackageReference Include="Whisper.net" Version="1.*" />
     <PackageReference Include="Whisper.net.Runtime" Version="1.*" />
