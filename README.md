@@ -69,7 +69,7 @@ dotnet run --project mac/YtTranscript.Mac.csproj -c Release
 
 ## Whisper models
 
-The selected model is downloaded automatically from Hugging Face on first use and stored in `%LOCALAPPDATA%\YtTranscript\models`.
+The selected model is downloaded automatically from Hugging Face on first use and stored in `%LOCALAPPDATA%\YtTranscript\models`. Models that are already downloaded are marked with ✓ in the list.
 
 | Model | Size | Note |
 |---|---|---|

@@ -210,12 +210,15 @@ public sealed class TranscriptService
         : t.TotalHours >= 1 ? $"{(int)t.TotalHours} h {t.Minutes:00} min"
         : $"{(int)Math.Ceiling(t.TotalMinutes)} min";
 
+    private static string ModelPath(string model) => Path.Combine(AppDir, "models", $"ggml-{model}.bin");
+
+    public static bool IsModelDownloaded(string model) => File.Exists(ModelPath(model));
+
     private static async Task<string> EnsureModelAsync(string model, IProgress<ProgressInfo> p, CancellationToken ct)
     {
-        var dir = Path.Combine(AppDir, "models");
-        Directory.CreateDirectory(dir);
-        var path = Path.Combine(dir, $"ggml-{model}.bin");
+        var path = ModelPath(model);
         if (File.Exists(path)) return path;
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
         var url = $"https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-{model}.bin";
         using var resp = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);

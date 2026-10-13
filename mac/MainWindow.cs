@@ -45,7 +45,10 @@ public sealed class MainWindow : Window
     private readonly Button _saveSrt = new() { IsEnabled = false };
 
     private readonly List<Item> _langItems = VideoLanguages.Select(c => new Item(c, () => L.T("Lang." + c))).ToList();
-    private readonly List<Item> _modelItems = Models.Select(c => new Item(c, () => L.T("Model." + c))).ToList();
+    // downloaded models are marked with a check
+    private readonly List<Item> _modelItems = Models
+        .Select(c => new Item(c, () => (TranscriptService.IsModelDownloaded(c) ? "✓ " : "") + L.T("Model." + c)))
+        .ToList();
 
     private readonly TranscriptService _service = new();
     private CancellationTokenSource? _cts;
@@ -214,6 +217,7 @@ public sealed class MainWindow : Window
             SetBusy(false);
             _cts.Dispose();
             _cts = null;
+            RefreshItems(_model, _modelItems); // the model may have just been downloaded
         }
     }
 

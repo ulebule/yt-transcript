@@ -58,7 +58,9 @@ public sealed class MainForm : Form
         foreach (var code in VideoLanguages) _lang.Items.Add(new Item(code, () => L.T("Lang." + code)));
         _lang.SelectedIndex = 0;
 
-        foreach (var code in Models) _model.Items.Add(new Item(code, () => L.T("Model." + code)));
+        // downloaded models are marked with a check
+        foreach (var code in Models)
+            _model.Items.Add(new Item(code, () => (TranscriptService.IsModelDownloaded(code) ? "✓ " : "") + L.T("Model." + code)));
         _model.SelectedIndex = DefaultModelIndex;
 
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, Padding = new Padding(10) };
@@ -202,6 +204,7 @@ public sealed class MainForm : Form
             SetBusy(false);
             _cts.Dispose();
             _cts = null;
+            RefreshItems(_model); // the model may have just been downloaded
         }
     }
 
